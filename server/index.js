@@ -3,7 +3,11 @@ var morgan = require('morgan');
 var parser = require('body-parser');
 var request = require('request');
 var mongoose = require('mongoose');
-var db = require('../database/index');
+var db = require('../database/dbConfig');
+var Repo = require('../database/index');
+var dbHelpers = require('../database/dbHelpers');
+var ghHelper = require('../helpers/github');
+var requestHandlers = require('../helpers/request-handlers');
 var app = express();
 
 app.use(morgan('dev'));
@@ -13,55 +17,17 @@ app.use(express.static(__dirname + '/../client/dist'));
 
 app.post('/repos/import', function (req, res) {
   // TODO
-  console.log(req.body);
-  var username = req.body.search;
-  var url = 'https://api.github.com/users/'+username+'/repos'
-  var options = { method: 'GET',
-  url: url,
-  headers:
-  {
-    'user-agent': 'sirajkakeh',
-     'cache-control': 'no-cache',
-     'content-type': 'application/json' },
-     form: { d: '1' }
-  };
-
-  request(options, function (error, response, body) {
-    if (error) throw new Error(error);
-    var temp = JSON.parse(body);
-    temp=temp[0];
-
-    db.findOne({id : }).exec(function(err, found) {
-    if (found) {
-      res.status(200).send(found);
-    } else {
-      util.getUrlTitle(uri, function(err, title) {
-        if (err) {
-          console.log('Error reading URL heading: ', err);
-          return res.sendStatus(404);
-        }
-        var newLink = new Link({
-          url: uri,
-          title: title,
-          baseUrl: req.headers.origin,
-          visits: 0
-        });
-        newLink.save(function(err, newLink) {
-          if (err) {
-            res.status(500).send(err);
-          } else {
-            res.status(200).send(newLink);
-          }
-        });
-      });
-    }
+  ghHelper.getReposGH(requestHandlers.optionsGenerator(req), function(data) {
+    dbHelpers.save(data);
   });
-    res.end(JSON.stringify(temp));
-  });
+  res.redirect('/');
 });
 
 app.get('/repos', function (req, res) {
   // TODO
+  Repo.find({}).exec(function(err, repos) {
+    res.status(200).send(repos);
+  });
 });
 
 var port = 1128;

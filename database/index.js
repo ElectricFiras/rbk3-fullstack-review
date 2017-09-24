@@ -1,9 +1,8 @@
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/fetcher');
 
 var repoSchema = mongoose.Schema({
   // TODO: your schema here!
-  id: { type: Number, index: { unique: true } },
+  id: Number,
   name: String,
   ownerId: Number,
   ownerName: String,
